@@ -8,6 +8,7 @@ greenglas = { path = "../../juice/greenglas" , version = "0.3.0" }
 juice = { path = "../../juice/juice", default-features = false , version = "0.3.0" }
 coaster = { path = "../../juice/coaster", default-features = false , version = "0.2.0" }
 coaster-nn = { path = "../../juice/coaster-nn", default-features = false , version = "0.5.0" }
+image = "0.23.12"
 
 [features]
 default = ["native", "cuda"]

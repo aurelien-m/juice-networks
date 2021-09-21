@@ -1,6 +1,8 @@
 use juice::layers::{SequentialConfig, ConvolutionConfig, PoolingConfig, PoolingMode, LinearConfig};
 use juice::layer::LayerConfig;
 
+use image::io::Reader as ImageReader;
+
 pub struct LeNet {
     batch_size: usize,
     input_width: usize,
@@ -8,8 +10,8 @@ pub struct LeNet {
     network: SequentialConfig,
 }
 
+#[cfg(all(feature="cuda"))]
 impl LeNet {
-    #[cfg(all(feature="cuda"))]
     pub fn new(input_width: usize, input_height: usize, options: Option<usize>) -> LeNet {
         let batch_size;
         if let Some(x) = options {
@@ -84,7 +86,7 @@ impl LeNet {
             LinearConfig { output_size: 84 },
         ));
 
-        // 1output: 10
+        // output: 10
         network.add_layer(LayerConfig::new(
             "output",
             LinearConfig { output_size: 10 },
@@ -96,5 +98,9 @@ impl LeNet {
             input_height: input_height,
             network: network.clone()
         }
+    }
+
+    pub fn train(directory: String, batch_size: u16) {
+        // TODO
     }
 }

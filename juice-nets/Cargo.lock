@@ -271,6 +271,7 @@ dependencies = [
  "coaster",
  "coaster-nn",
  "greenglas",
+ "image",
  "juice",
 ]
 
