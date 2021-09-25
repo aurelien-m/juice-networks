@@ -23,7 +23,7 @@ impl LeNet {
         let mut network = SequentialConfig::default();
 
         // output: 32 x 32 x 1
-        network.add_input("data", &[batch_size, input_width, input_width]);
+        network.add_input("data", &[batch_size, input_height, input_width]);
 
         // output: 28 x 28 x 6
         network.add_layer(LayerConfig::new(

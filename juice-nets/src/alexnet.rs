@@ -1,15 +1,30 @@
+use std::fs::read_dir;
+use std::io::Result;
+use std::path::Path;
+use std::rc::Rc;
+use std::sync::{Arc, RwLock};
+
+use coaster::frameworks::cuda::get_cuda_backend;
+use coaster::SharedTensor;
 use juice::layer::{LayerConfig, LayerType};
 use juice::layers::{
     ConvolutionConfig, LinearConfig, PoolingConfig, PoolingMode, SequentialConfig,
 };
 
-use image::io::Reader as ImageReader;
+use csv::{self, StringRecord};
+use serde::Deserialize;
 
 pub struct AlexNet {
     batch_size: usize,
     input_width: usize,
     input_height: usize,
     network: SequentialConfig,
+}
+
+#[derive(Deserialize)]
+struct Row {
+    id: String,
+    breed: String,
 }
 
 #[cfg(all(feature = "cuda"))]
@@ -120,9 +135,18 @@ impl AlexNet {
             },
         ));
 
-        network.add_layer(LayerConfig::new("fully-connected", LinearConfig { output_size: 4096 }));
-        network.add_layer(LayerConfig::new("fully-connected", LinearConfig { output_size: 4096 }));
-        network.add_layer(LayerConfig::new("fully-connected", LinearConfig { output_size: 1000 }));
+        network.add_layer(LayerConfig::new(
+            "fully-connected",
+            LinearConfig { output_size: 4096 },
+        ));
+        network.add_layer(LayerConfig::new(
+            "fully-connected",
+            LinearConfig { output_size: 4096 },
+        ));
+        network.add_layer(LayerConfig::new(
+            "fully-connected",
+            LinearConfig { output_size: 1000 },
+        ));
 
         AlexNet {
             batch_size: batch_size,
@@ -132,7 +156,47 @@ impl AlexNet {
         }
     }
 
-    pub fn train(directory: String, batch_size: u16) {
-        // TODO
+    pub fn train(&self, csv_map: &str, train_directory: &str, batch_size: usize) -> Result<()> {
+        let backend = Rc::new(get_cuda_backend());
+
+        let input = SharedTensor::<f32>::new(&[
+            batch_size,
+            3 as usize,
+            self.input_height,
+            self.input_width,
+        ]);
+        let input_lock = Arc::new(RwLock::new(input));
+
+        let label = SharedTensor::<f32>::new(&[batch_size as usize, 1]);
+        let label_lock = Arc::new(RwLock::new(label));
+
+        let dataset_path = Path::new(&train_directory);
+        let dataset_directory = read_dir(dataset_path).unwrap();
+
+        let header = StringRecord::from(vec!["id", "breed"]);
+
+        let csv_reader = csv::Reader::from_path(&csv_map);
+        let mut train_images = csv_reader.unwrap();
+
+        for batch_n in 0..(dataset_directory.count() / batch_size as usize) {
+            let mut input_tensor = input_lock.write().unwrap();
+            let mut label_tensor = label_lock.write().unwrap();
+
+            for image_n in batch_n..(batch_n + batch_size) {
+                match train_images.records().next().unwrap() {
+                    Ok(record) => {
+                        let row: Row = record.deserialize(Some(&header))?;
+                        println!("id: {:?} - breed: {:?}", row.id, row.breed);
+                    }
+                    Err(_) => {
+                        // TODO ...
+                    }
+                }
+            }
+
+            // let image_bytes =
+        }
+
+        Ok(())
     }
 }

@@ -9,6 +9,8 @@ juice = { path = "../../juice/juice", default-features = false , version = "0.3.
 coaster = { path = "../../juice/coaster", default-features = false , version = "0.2.0" }
 coaster-nn = { path = "../../juice/coaster-nn", default-features = false , version = "0.5.0" }
 image = "0.23.12"
+csv = "1.1.6"
+serde = { version = "1.0", features = ["derive"] }
 
 [features]
 default = ["native", "cuda"]
